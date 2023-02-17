@@ -10,6 +10,7 @@ packages = [{include = "src"}]
 python = "^3.10"
 aiogram = "^2.25.1"
 python-dotenv = "^0.21.1"
+typer = "^0.7.0"
 
 [tool.poetry.scripts]
 start = "src.main:run"
