@@ -30,5 +30,14 @@ async def welcome(message: types.Message):
         return
     await message.reply("It's work")
 
+
+@dp.message_handler(commands=["map"])
+async def welcome(message: types.Message):
+    if message.from_user.id != message.chat.id:
+        return
+    with open("./src/assets/map.jpg", 'rb') as file:
+         await bot.send_photo(message.from_user.id, file)
+
+
 def run() -> None:
     executor.start_polling(dp, skip_updates=False)
