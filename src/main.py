@@ -85,10 +85,8 @@ async def welcome(message: types.Message):
         db.add_line(db.commands_csv, ", ".join([str(message.from_user.id), "null", ""]) + '\n')
     
 
-
-
 @dp.message_handler(commands=["map"])
-async def map(message: types.Message):
+async def map_handler(message: types.Message):
     if message.from_user.id != message.chat.id:
         return
     with open("./src/assets/map.jpg", 'rb') as file:
@@ -105,11 +103,15 @@ async def get_events(message: types.Message):
     await message.reply("Свободные точки:\n%s" % "\n".join([x[1] for x in events_list]))
 
 @dp.message_handler(commands=["odin"])
-async def map(message: types.Message):
+async def odin_hanlder(message: types.Message):
     code_ = "/odin"
     if message.from_user.id != message.chat.id:
         return
     
+    if code_ in (db.get_elem(db.commands_csv, 0, str(message.from_user.id), 3).split("|")):
+        await message.reply('Выбери другое место')
+        return
+
     if db.get_elem(db.commands_csv, 0, str(message.from_user.id), 1) != "null":
         await message.reply("Сначала заверши прошлую точку")
         return
@@ -127,9 +129,13 @@ async def map(message: types.Message):
 
 
 @dp.message_handler(commands=["dva"])
-async def map(message: types.Message):
+async def dva_handler(message: types.Message):
     code_ = "/dva"
     if message.from_user.id != message.chat.id:
+        return
+
+    if code_ in (db.get_elem(db.commands_csv, 0, str(message.from_user.id), 3).split("|")):
+        await message.reply('Выбери другое место')
         return
     
     if db.get_elem(db.commands_csv, 0, str(message.from_user.id), 1) != "null":
@@ -149,9 +155,13 @@ async def map(message: types.Message):
 
 
 @dp.message_handler(commands=["three"])
-async def map(message: types.Message):
+async def three_handler(message: types.Message):
     code_ = "/three"
     if message.from_user.id != message.chat.id:
+        return
+
+    if code_ in (db.get_elem(db.commands_csv, 0, str(message.from_user.id), 3).split("|")):
+        await message.reply('Выбери другое место')
         return
     
     if db.get_elem(db.commands_csv, 0, str(message.from_user.id), 1) != "null":
@@ -160,7 +170,7 @@ async def map(message: types.Message):
 
     check_is_free = db.get_elem(db.events_csv, 1, code_, 2)
     if check_is_free is None:
-        await message.reply('Непредвиденная ошибка\nОбратись @Sta_tun_slav')
+        await message.reply('Непредвиденная ошибка\nОбратитесь к @Sta_tun_slav')
         return
     if check_is_free == "0":
         await message.reply("Извини, эта точка уже занята\nВыбери другую /get_events")
@@ -168,6 +178,46 @@ async def map(message: types.Message):
     db.change_line(db.events_csv, 1, code_, 2, "0")
     db.change_line(db.commands_csv, 0, str(message.from_user.id), 1, code_)
     await message.reply("Точка %s выбрана" % code_)
+
+
+@dp.message_handler()
+async def any_text_message2(message: types.Message):
+    white_list = ["ку", "rere", "re"]
+    key = message.text
+    if key in white_list:
+        list_of_keys = db.get_elem(db.commands_csv, 0, str(message.from_user.id), 2).split("|")
+        list_of_keys = list(map(lambda x: x.strip(), list_of_keys))
+        if key in list_of_keys:
+            await message.reply("Прошлое кодовое слово использовать нельзя )")
+            return
+            
+        now_event = db.get_elem(db.commands_csv, 0, str(message.from_user.id), 1)
+        
+        list_of_events = db.get_elem(db.commands_csv, 0, str(message.from_user.id), 3).split("|")
+        list_of_events = list(map(lambda x: x.strip(), list_of_events))
+        db.change_line(db.commands_csv, 0, str(message.from_user.id), 3, "|".join(list_of_events + [now_event]))
+        
+        db.change_line(db.events_csv, 1, now_event, 2, "1")
+        list_of_keys.append(key)
+        db.change_line(db.commands_csv, 0, str(message.from_user.id), 2, "|".join(list_of_keys))
+        db.change_line(db.commands_csv, 0, str(message.from_user.id), 1, "null")
+        
+        if len(list_of_keys) == 2:
+            with open("./src/assets/Сообщение 1.mp3", "rb") as file:
+                await message.reply_audio(file)
+        elif len(list_of_keys) == 3:
+            with open("./src/assets/Сообщение 2.png", "rb") as file:
+                await message.reply_photo(file)
+        elif len(list_of_keys) == 4:
+            with open("./src/assets/сообщение 3.png", "rb") as file:
+                await message.reply_photo(file)
+        elif len(list_of_keys) == 5:
+            with open("./src/assets/сообщение 4.png", "rb") as file:
+                await message.reply_photo(file)
+        return
+
+    await message.reply("Извини, не понял тебя\nПроверь кодовое слово")    
+
 
 def run() -> None:
     executor.start_polling(dp, skip_updates=False)
